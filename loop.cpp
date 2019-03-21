@@ -2,6 +2,8 @@
 #include "setup.h"
 #include "src/utility/debug.h"
 
+elapsedMillis blink;
+
 void initMonomeDevice(int driver, const char *pss) {
     debugln(INFO, "initMonomeDevice");
 
@@ -84,4 +86,17 @@ void _loop() {
 
     for (int i = 0; i < SERIAL_DEVICE_COUNT; i++) 
         if (serialDevices[i].isMonome) serialDevices[i].poll();
+
+    for (int i = 0; i < BUTTON_COUNT; i++) {
+        buttons[i].poll();
+        if (buttons[i].event == PRESSED)
+            leds[i].on();
+        else if (buttons[i].event == RELEASED)
+            leds[i].off();
+    }
+
+    if (blink > 500) {
+        led.toggle();
+        blink = 0;
+    }
 }
