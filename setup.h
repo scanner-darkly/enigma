@@ -24,6 +24,7 @@ class UsbDriver {
     public:
         String name;
         bool active;
+        bool serial;
         bool monome;
         USBDriver *driver;
 };

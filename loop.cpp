@@ -76,7 +76,7 @@ void _updateDeviceInfo() {
         if (pss && *pss) debugfln(INFO, "  serial: %s", pss);
 
         sprintf(maker, "%s", psz);
-        if (String(maker) == "monome") initMonomeDevice(i, pss);
+        if (String(maker) == "monome" && usbDrivers[i].serial) initMonomeDevice(i, pss);
     }
 }
 

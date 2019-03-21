@@ -51,6 +51,7 @@ void _setup() {
     for (int i = 0; i < USB_DRIVER_COUNT; i++) {
         usbDrivers[i].driver = NULL;
         usbDrivers[i].active = false;
+        usbDrivers[i].serial = false;
         usbDrivers[i].monome = false;
     }
 
@@ -63,6 +64,7 @@ void _setup() {
     
     for (int i = 0; i < SERIAL_DEVICE_COUNT; i++) {
         usbDrivers[di].driver = &serialDevices[i];
+        usbDrivers[di].serial = true;
         usbDrivers[di++].name = "Serial" + i;
     }
 
