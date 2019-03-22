@@ -59,7 +59,7 @@ void MonomeSerial::poll() {
 }
 
 void MonomeSerial::refresh() {
-    if (!active) return;
+    if (!active || !isMonome) return;
   
     uint8_t buf[35];
     int ind, led;

@@ -2,7 +2,11 @@
 #include "setup.h"
 #include "src/utility/debug.h"
 
+elapsedMillis monomeRefreshTimer;
+
 elapsedMillis blink;
+const int MAX_ENCODER_COUNT = 8;
+int arcValues[MAX_ENCODER_COUNT] = { 0 };
 
 void initMonomeDevice(int driver, const char *pss) {
     debugln(INFO, "initMonomeDevice");
@@ -84,9 +88,13 @@ void _loop() {
     _updateDeviceInfo();
     usbHost.Task();
 
-    for (int i = 0; i < SERIAL_DEVICE_COUNT; i++) 
-        if (serialDevices[i].isMonome) serialDevices[i].poll();
+    // blink teensy LED
+    if (blink > 500) {
+        led.toggle();
+        blink = 0;
+    }
 
+    // light LEDs when buttons pressed
     for (int i = 0; i < BUTTON_COUNT; i++) {
         buttons[i].poll();
         if (buttons[i].event == PRESSED)
@@ -95,8 +103,28 @@ void _loop() {
             leds[i].off();
     }
 
-    if (blink > 500) {
-        led.toggle();
-        blink = 0;
+    // simple grid/arc test
+    for (int i = 0; i < SERIAL_DEVICE_COUNT; i++) {
+        if (serialDevices[i].isMonome) serialDevices[i].poll();
+        while (serialDevices[i].gridEventAvailable()) {
+            GridEvent event = serialDevices[i].readGridEvent();
+            serialDevices[i].setGridLed(event.x, event.y, event.pressed ? 15 : 0);
+            serialDevices[i].refreshGrid();
+        }
+        while (serialDevices[i].encoderEventAvailable()) {
+            EncoderEvent event = serialDevices[i].readEncoderEvent();
+            if (event.encoder < MAX_ENCODER_COUNT) {
+                arcValues[event.encoder] = (arcValues[event.encoder] + 64 + (event.delta > 0 ? 1 : -1)) & 63;
+                debugln(INFO, arcValues[event.encoder]);
+                serialDevices[i].clearArcRing(event.encoder);
+                serialDevices[i].setArcLed(event.encoder, arcValues[event.encoder], 15);
+                serialDevices[i].refreshArc();
+            }
+        }
+    }
+
+    if (monomeRefreshTimer > 50) {
+        for (int i = 0; i < SERIAL_DEVICE_COUNT; i++) serialDevices[i].refresh();
+        monomeRefreshTimer = 0;
     }
 }
